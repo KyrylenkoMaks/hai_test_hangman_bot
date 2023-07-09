@@ -2,12 +2,12 @@ import random
 import telebot
 from telebot import types
 
-hint_button = types.InlineKeyboardButton(text='Take a hint', callback_data="takehint")
+hint_button = types.InlineKeyboardButton(text='Взяти підказку', callback_data="takehint")
 markup_inline = types.InlineKeyboardMarkup()
 
 hang_bot = telebot.TeleBot('TOKEN')
 current_game = None
-wordlist = ['удача', 'кілт', 'буран', 'будинок', 'розмарин','окуляри']
+wordlist = ['удача', 'кілт', 'буран', 'будинок', 'розмарин', 'окуляри', 'фольга', 'батарея', 'піцца', 'вежа', 'цукерка', 'гаманець', 'дзига', 'танго']
 
 
 class HangmanGame:
@@ -22,11 +22,10 @@ class HangmanGame:
         global current_game
         letter = message.text.lower()
         if letter in self.guessed_letters:
-            hang_bot.send_message(message.chat.id,f'Ти вже відгадував цю літеру')
+            hang_bot.send_message(message.chat.id, f'Ти вже відгадував цю літеру')
         else:
             self.guessed_letters.add(letter)
             self.masked_word = ''.join(char if char.lower() in self.guessed_letters else "*" for char in self.word)
-
             if self.masked_word == self.word:
                 current_game = None
                 hang_bot.send_message(message.chat.id, f'Молодець! Гру завершено!\nПравильне слово: {self.word}\nЯкщо хочеш зіграти ще, відправляй /play')
@@ -46,6 +45,7 @@ class HangmanGame:
         else:
             self.handle_guess(message)
 
+
 @hang_bot.message_handler(commands=["start"])
 def botgreeting(message):
     hang_bot.send_message(message.chat.id, '''Привіт!
@@ -61,9 +61,9 @@ def play(message):
     markup_inline = types.InlineKeyboardMarkup()
     current_game = HangmanGame()
     markup_inline.add(hint_button)
-    hang_bot.send_message(message.chat.id, f'Що ж, давай зіграємо!\nЯ загадав наступне слово:\n{current_game.masked_word}\nСпробуй відгадати!',reply_markup=markup_inline)
+    hang_bot.send_message(message.chat.id, f'Що ж, давай зіграємо!\nЯ загадав наступне слово:\n{current_game.masked_word}\nСпробуй відгадати!', reply_markup=markup_inline)
 
-@hang_bot.message_handler(func= lambda message:True,)
+@hang_bot.message_handler(func=lambda message: True,)
 def bot_reply(message):
     global current_game
     if current_game == None:
@@ -71,9 +71,11 @@ def bot_reply(message):
     else:
         current_game.receive_msg(message)
 
-@hang_bot.callback_query_handler(func=lambda call: call.data=="takehint")
+@hang_bot.callback_query_handler(func=lambda call: call.data == "takehint")
 def hint(call):
     global current_game
+    if current_game == None:
+        hang_bot.send_message(call.message.chat.id, 'Наразі гра не відбувається, щоб почати нову, пиши /play')
     if current_game.hint_taken:
         hang_bot.send_message(call.message.chat.id, f'Ти вже брав підказку!')
         return
